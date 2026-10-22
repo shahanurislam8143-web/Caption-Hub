@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="bn" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Glassmorphism Caption App Pro - OurDinajpur</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            400: '#38bdf8',
+                            500: '#06b6d4',
+                            600: '#0284c7',
+                            900: '#0f172a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Firebase SDKs (v9 Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+    <style>
+        * {
+            font-family: 'Hind Siliguri', sans-serif;
+        }
+
+        /* Dark & Light Background Styles */
+        html.dark body {
+            background-color: #080c14 !important;
+            color: #f3f4f6 !important;
+        }
+
+        html:not(.dark) body {
+            background-color: #e2e8f0 !important;
+            color: #0f172a !important;
+        }
+
+        /* Dark Mode Glass */
+        html.dark .glass-card {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        html.dark .glass-nav {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        html.dark .glass-input {
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+        }
+
+        /* Light Mode Glass */
+        html:not(.dark) .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        html:not(.dark) .glass-nav {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(203, 213, 225, 0.8);
+        }
+
+        html:not(.dark) .glass-input {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(203, 213, 225, 1);
+            color: #0f172a;
+        }
+
+        .btn-glow {
+            background: linear-gradient(135deg, #0284c7 0%, #06b6d4 100%);
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+
+<body class="pb-24 pt-16 transition-colors duration-300">
+
+    <!-- Top Navigation Bar -->
+    <nav class="fixed top-0 left-0 right-0 z-40 glass-nav px-4 py-3">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('feed')">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30">
+                    <i class="fa-solid font-bold text-xl text-white">C</i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-400">
+                        Caption Universe
+                    </h1>
+                    <p class="text-[10px] text-gray-400 tracking-wider">OurDinajpur Verified</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-2">
+                <!-- Theme Switcher -->
+                <button onclick="toggleTheme()" class="p-2.5 rounded-xl glass-card text-amber-400 hover:text-amber-300 transition" title="ডার্ক/লাইট থিম">
+                    <i id="themeIcon" class="fa-solid fa-sun text-lg"></i>
+                </button>
+
+                <!-- Auth Section -->
+                <div id="userAuthSection">
+                    <!-- Rendered via JS -->
+                </div>
+
+                <!-- Admin Button -->
+                <button onclick="openAdminModal()" class="p-2 rounded-xl glass-card text-amber-400 hover:text-amber-300 transition" title="এডমিন প্যানেল">
+                    <i class="fa-solid fa-user-shield text-lg"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Top Banner Ad Container -->
+    <div class="max-w-4xl mx-auto px-4 mt-4">
+        <div id="topAdContainer" class="glass-card rounded-2xl p-2 text-center overflow-hidden min-h-[60px] flex items-center justify-center">
+            <span class="text-xs opacity-60">Top Ad Banner Space</span>
+        </div>
+    </div>
+
+    <!-- Main Content Feed -->
+    <main class="max-w-4xl mx-auto px-4 mt-4">
+        <div class="mb-6 overflow-x-auto no-scrollbar flex items-center space-x-2 py-2" id="categoryFilterContainer">
+            <!-- Categories -->
+        </div>
+
+        <div class="glass-card rounded-2xl p-4 mb-6 relative overflow-hidden">
+            <div class="flex items-center space-x-3">
+                <img id="createPostAvatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Guest" class="w-10 h-10 rounded-full bg-slate-800 object-cover">
+                <button onclick="openCreateModal()" class="w-full text-left glass-input rounded-xl px-4 py-2.5 text-sm text-gray-400 transition">
+                    আপনার পছন্দের ক্যাপশন শেয়ার করুন...
+                </button>
+            </div>
+        </div>
+
+        <div id="postsFeedContainer" class="space-y-6">
+            <!-- Posts -->
+        </div>
+    </main>
+
+    <!-- Bottom Sticky Ad Container -->
+    <div class="fixed bottom-16 left-0 right-0 z-30 px-4 pointer-events-none">
+        <div class="max-w-4xl mx-auto pointer-events-auto">
+            <div id="bottomAdContainer" class="glass-nav rounded-2xl p-2 text-center shadow-2xl overflow-hidden flex items-center justify-center min-h-[50px]">
+                <span class="text-xs opacity-60">Bottom Sticky Ad Banner</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation Bar -->
+    <div class="fixed bottom-0 left-0 right-0 z-40 glass-nav border-t border-gray-800/20 px-6 py-2">
+        <div class="max-w-md mx-auto flex items-center justify-between">
+            <button onclick="switchTab('feed')" class="flex flex-col items-center space-y-1 text-cyan-400 hover:text-cyan-300">
+                <i class="fa-solid fa-house text-lg"></i>
+                <span class="text-[10px]">ফিড</span>
+            </button>
+            <button onclick="openCreateModal()" class="w-12 h-12 -mt-5 rounded-full btn-glow text-white flex items-center justify-center text-xl shadow-lg border-2 border-cyan-300/30">
+                <i class="fa-solid fa-plus"></i>
+            </button>
+            <button onclick="switchTab('messages')" class="flex flex-col items-center space-y-1 text-gray-400 hover:text-cyan-400">
+                <i class="fa-solid fa-comments text-lg"></i>
+                <span class="text-[10px]">মেসেজ</span>
+            </button>
+            <button onclick="handleNavProfileClick()" class="flex flex-col items-center space-y-1 text-gray-400 hover:text-cyan-400">
+                <i class="fa-solid fa-user text-lg"></i>
+                <span class="text-[10px]">প্রোফাইল</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ================= MODALS & VIEWS ================= -->
+
+    <!-- USER REGISTRATION & LOGIN MODAL -->
+    <div id="loginModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden">
+        <div class="glass-card rounded-3xl w-full max-w-sm p-6 relative border border-cyan-500/40">
+            <button onclick="closeModal('loginModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white p-1">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+
+            <!-- Mode Switch Tabs -->
+            <div class="flex space-x-2 border-b border-gray-700 pb-3 mb-4">
+                <button id="tabAuthLogin" onclick="switchAuthMode('login')" class="flex-1 py-1 text-xs font-bold text-cyan-400 border-b-2 border-cyan-400">লগইন</button>
+                <button id="tabAuthRegister" onclick="switchAuthMode('register')" class="flex-1 py-1 text-xs font-bold text-gray-400">রেজিস্ট্রেশন</button>
+            </div>
+
+            <!-- LOGIN FORM -->
+            <form id="formLogin" onsubmit="handleUserLogin(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold mb-1">জিমেইল ইমেইল</label>
+                    <input type="email" id="loginEmail" required placeholder="yourname@gmail.com" class="w-full glass-input rounded-xl px-3 py-2 text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold mb-1">পাসওয়ার্ড</label>
+                    <input type="password" id="loginPass" required placeholder="******" class="w-full glass-input rounded-xl px-3 py-2 text-xs">
+                </div>
+                <button type="submit" class="w-full btn-glow py-2.5 rounded-xl text-xs font-bold text-white">লগইন করুন</button>
+            </form>
+
+            <!-- REGISTER FORM -->
+            <form id="formRegister" onsubmit="handleUserRegister(event)" class="space-y-3 hidden">
+                <div>
+                    <label class="block text-xs font-semibold mb-1">আপনার নাম</label>
+                    <input type="text" id="regName" required placeholder="তানভীর হাসান" class="w-full glass-input rounded-xl px-3 py-2 text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold mb-1">আপনার আসল জিমেইল</label>
+                    <input type="email" id="regEmail" required placeholder="yourname@gmail.com" class="w-full glass-input rounded-xl px-3 py-2 text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold mb-1">গোপন পাসওয়ার্ড</label>
+                    <input type="password" id="regPass" required minlength="6" placeholder="কমপক্ষে ৬ ডিজিট" class="w-full glass-input rounded-xl px-3 py-2 text-xs">
+                </div>
+                <p class="text-[10px] text-amber-400 leading-tight">⚠️ রেজিস্ট্রেশন করার পর আপনার জিমেইলে একটি ভেরিফিকেশন লিংক যাবে। লিংকে ক্লিক করে ভেরিফাই করলেই কেবল পোস্ট বা কমেন্ট করতে পারবেন!</p>
+                <button type="submit" class="w-full btn-glow py-2.5 rounded-xl text-xs font-bold text-white">সাইন আপ ও লিংক পাঠান</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- FOLLOW ADMIN POPUP -->
+    <div id="followAdminModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden">
+        <div class="glass-card rounded-3xl w-full max-w-sm p-6 relative border border-cyan-500/40 text-center space-y-4 shadow-2xl">
+            <button onclick="closeModal('followAdminModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white p-1">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+
+            <div class="relative w-20 h-20 mx-auto">
+                <img id="adminPopupAvatar" src="" class="w-20 h-20 rounded-full object-cover border-2 border-cyan-400 shadow-lg shadow-cyan-500/30">
+                <span class="absolute bottom-0 right-1 w-4 h-4 bg-emerald-400 border-2 border-slate-900 rounded-full"></span>
+            </div>
+
+            <div>
+                <h3 id="adminPopupName" class="font-bold text-lg"></h3>
+                <p class="text-xs text-cyan-400 font-medium">অফিসিয়াল এডমিন প্রোফাইল</p>
+            </div>
+
+            <p class="text-xs leading-relaxed opacity-80 p-3 rounded-2xl border border-gray-700/50">
+                আমাদের অফিশিয়াল সোশ্যাল মিডিয়া পেজগুলোতে যুক্ত হয়ে প্রতিনিয়ত নতুন ক্যাপশন ও আপডেট পেতে এডমিনকে ফলো করে রাখুন!
+            </p>
+
+            <div class="space-y-2 pt-1">
+                <a id="adminFbBtn" href="#" target="_blank" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs flex items-center justify-center space-x-2 transition">
+                    <i class="fa-brands fa-facebook text-base"></i>
+                    <span>Facebook এ ফলো করুন</span>
+                </a>
+                <a id="adminTtBtn" href="#" target="_blank" class="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-black text-white border border-gray-700 font-semibold text-xs flex items-center justify-center space-x-2 transition">
+                    <i class="fa-brands fa-tiktok text-base text-pink-400"></i>
+                    <span>TikTok এ ফলো করুন</span>
+                </a>
+                <a id="adminYtBtn" href="#" target="_blank" class="w-full py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold text-xs flex items-center justify-center space-x-2 transition">
+                    <i class="fa-brands fa-youtube text-base"></i>
+                    <span>YouTube সাবস্ক্রাইব করুন</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- CREATE POST MODAL -->
+    <div id="createModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md hidden">
+        <div class="glass-card rounded-3xl w-full max-w-lg p-6 relative border border-cyan-500/30">
+            <div class="flex items-center justify-between pb-4 border-b border-gray-700/50">
+                <h3 class="font-bold text-lg flex items-center gap-2">
+                    <i class="fa-solid fa-pen-nib text-cyan-400"></i> <span>নতুন ক্যাপশন পোস্ট</span>
+                </h3>
+                <button onclick="closeModal('createModal')" class="text-gray-400 hover:text-white p-1">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4 mt-4">
+                <div>
+                    <label class="block text-xs font-medium mb-1">ক্যাটাগরি সিলেক্ট করুন</label>
+                    <select id="postCategorySelect" class="w-full glass-input rounded-xl px-4 py-2.5 text-sm"></select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium mb-1">ক্যাপশন লিখুন</label>
+                    <textarea id="postText" rows="4" placeholder="এখানে আপনার পছন্দনীয় ক্যাপশন লিখুন..." class="w-full glass-input rounded-xl p-3 text-sm resize-none"></textarea>
+                </div>
+
+                <div class="flex justify-end space-x-3 pt-2">
+                    <button onclick="closeModal('createModal')" class="px-5 py-2 rounded-xl text-sm text-gray-400">বাতিল</button>
+                    <button onclick="submitNewPost()" class="btn-glow px-6 py-2 rounded-xl text-sm font-semibold text-white">পাবলিশ করুন</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- USER PROFILE MODAL -->
+    <div id="profileModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden overflow-y-auto">
+        <div class="glass-card rounded-3xl w-full max-w-xl p-6 relative border border-cyan-500/30 max-h-[90vh] overflow-y-auto my-auto">
+            <button onclick="closeModal('profileModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white p-2 z-10">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <div id="profileContent"></div>
+        </div>
+    </div>
+
+    <!-- CHAT MODAL -->
+    <div id="messagesModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden">
+        <div class="glass-card rounded-3xl w-full max-w-2xl h-[80vh] flex flex-col border border-cyan-500/30 overflow-hidden">
+            <div class="p-4 border-b border-gray-700/50 flex items-center justify-between bg-slate-900/50">
+                <div class="flex items-center space-x-3">
+                    <button onclick="closeModal('messagesModal')" class="text-gray-400 hover:text-white mr-2">
+                        <i class="fa-solid fa-arrow-left text-lg"></i>
+                    </button>
+                    <img id="chatUserAvatar" src="" class="w-10 h-10 rounded-full object-cover">
+                    <div>
+                        <h4 id="chatUserName" class="font-bold text-sm"></h4>
+                        <p class="text-[10px] text-cyan-400 flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> অনলাইন
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div id="chatMessages" class="flex-1 p-4 overflow-y-auto space-y-3"></div>
+            <div class="p-3 border-t border-gray-700/50 flex items-center space-x-2">
+                <input id="chatInput" type="text" placeholder="মেসেজ লিখুন..." class="flex-1 glass-input rounded-xl px-4 py-2 text-sm">
+                <button onclick="sendDirectMessage()" class="btn-glow p-2.5 rounded-xl text-white">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN LOGIN MODAL -->
+    <div id="adminLoginModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden">
+        <div class="glass-card rounded-3xl w-full max-w-md p-6 relative border border-amber-500/40">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto mb-3 text-2xl shadow-lg shadow-amber-500/20">
+                    <i class="fa-solid fa-user-lock"></i>
+                </div>
+                <h3 class="font-bold text-xl">এডমিন লগইন</h3>
+                <p class="text-xs text-gray-400 mt-1">এডমিন প্যানেলে প্রবেশ করতে সিক্রেট পাসওয়ার্ড দিন</p>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-medium mb-1">এডমিন পাসওয়ার্ড (Secret Key)</label>
+                    <input type="password" id="adminPasswordInput" placeholder="পাসওয়ার্ড দিন..." class="w-full glass-input rounded-xl px-4 py-2.5 text-sm">
+                </div>
+                <div class="flex space-x-3 pt-2">
+                    <button onclick="closeModal('adminLoginModal')" class="w-1/2 py-2.5 rounded-xl text-sm text-gray-400">বাতিল</button>
+                    <button onclick="verifyAdminLogin()" class="w-1/2 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold py-2.5 rounded-xl text-sm shadow-lg shadow-amber-500/30">লগইন</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN ADMIN DASHBOARD MODAL -->
+    <div id="adminDashboardModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden overflow-y-auto">
+        <div class="glass-card rounded-3xl w-full max-w-4xl p-6 relative border border-amber-500/40 max-h-[90vh] overflow-y-auto my-auto">
+            <div class="flex items-center justify-between pb-4 border-b border-gray-700/50 mb-6">
+                <div class="flex items-center space-x-3">
+                    <span class="px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 text-xs border border-amber-500/30 font-semibold">OURDINAJPUR ADMIN</span>
+                    <h3 class="font-bold text-lg">এডমিন কন্ট্রোল প্যানেল</h3>
+                </div>
+                <button onclick="closeModal('adminDashboardModal')" class="text-gray-400 hover:text-white p-1">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <div class="flex space-x-2 border-b border-gray-700/50 pb-3 mb-6 overflow-x-auto no-scrollbar">
+                <button onclick="switchAdminTab('posts')" id="tabBtnPosts" class="px-4 py-2 rounded-xl text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">পোস্ট ম্যানেজমেন্ট</button>
+                <button onclick="switchAdminTab('users')" id="tabBtnUsers" class="px-4 py-2 rounded-xl text-xs font-semibold text-gray-400">ইউজার কন্ট্রোল & ব্যান</button>
+                <button onclick="switchAdminTab('messages')" id="tabBtnMsgMonitor" class="px-4 py-2 rounded-xl text-xs font-semibold text-gray-400">ফুল মেসেজ মনিটর</button>
+                <button onclick="switchAdminTab('popup')" id="tabBtnPopup" class="px-4 py-2 rounded-xl text-xs font-semibold text-gray-400">পপআপ & ছবি আপলোড</button>
+                <button onclick="switchAdminTab('categories')" id="tabBtnCategories" class="px-4 py-2 rounded-xl text-xs font-semibold text-gray-400">ক্যাটাগরি</button>
+                <button onclick="switchAdminTab('ads')" id="tabBtnAds" class="px-4 py-2 rounded-xl text-xs font-semibold text-gray-400">এডস কোড</button>
+            </div>
+
+            <div id="adminTabPosts" class="space-y-4">
+                <h4 class="text-sm font-bold text-cyan-400 flex items-center gap-2"><i class="fa-solid fa-layer-group"></i> সকল পোস্ট এডিট ও কন্ট্রোল</h4>
+                <div id="adminPostsList" class="space-y-3 max-h-80 overflow-y-auto pr-1"></div>
+            </div>
+
+            <div id="adminTabUsers" class="space-y-4 hidden">
+                <h4 class="text-sm font-bold text-rose-400 flex items-center gap-2"><i class="fa-solid fa-users-gear"></i> ইউজার লিস্ট ও ব্যান ম্যানেজমেন্ট</h4>
+                <div id="adminUsersList" class="space-y-2 max-h-80 overflow-y-auto"></div>
+            </div>
+
+            <div id="adminTabMessages" class="space-y-4 hidden">
+                <h4 class="text-sm font-bold text-purple-400 flex items-center gap-2"><i class="fa-solid fa-comments"></i> ইউজারের চ্যাট সিলেক্ট করে সম্পূর্ণ মেসেজ দেখুন</h4>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div id="adminChatThreadsList" class="space-y-2 max-h-80 overflow-y-auto border-r border-gray-700/50 pr-2"></div>
+                    <div id="adminChatFullBox" class="md:col-span-2 glass-card rounded-2xl p-4 h-80 overflow-y-auto space-y-2 border border-gray-700/50">
+                        <p class="text-xs text-gray-400 text-center py-10">বামপাশের যেকোনো ইউজারের চ্যাটে ক্লিক করে মেসেজ বক্স দেখুন</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="adminTabPopup" class="space-y-4 hidden">
+                <h4 class="text-sm font-bold text-amber-400 flex items-center gap-2"><i class="fa-solid fa-image"></i> ফোন থেকে ছবি আপলোড ও সোশ্যাল প্রোফাইল</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold mb-1">এডমিনের নাম</label>
+                        <input type="text" id="adminInputName" class="w-full glass-input rounded-xl px-4 py-2 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold mb-1">ফোন থেকে সরাসরি এডমিন ছবি সিলেক্ট করুন</label>
+                        <input type="file" id="adminFileInput" accept="image/*" class="w-full text-xs text-gray-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:bg-cyan-500/20 file:text-cyan-300">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-blue-400 mb-1">Facebook লিংক</label>
+                        <input type="text" id="adminInputFb" class="w-full glass-input rounded-xl px-4 py-2 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-pink-400 mb-1">TikTok লিংক</label>
+                        <input type="text" id="adminInputTt" class="w-full glass-input rounded-xl px-4 py-2 text-xs">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-semibold text-red-400 mb-1">YouTube চ্যানেল লিংক</label>
+                        <input type="text" id="adminInputYt" class="w-full glass-input rounded-xl px-4 py-2 text-xs">
+                    </div>
+                </div>
+                <button onclick="adminSavePopupSettings()" class="w-full btn-glow py-2.5 rounded-xl text-sm font-semibold text-white">সেটিংস ও ছবি সেভ করুন</button>
+            </div>
+
+            <div id="adminTabCategories" class="space-y-4 hidden">
+                <div class="flex space-x-2">
+                    <input type="text" id="newCategoryInput" placeholder="নতুন ক্যাটাগরি..." class="flex-1 glass-input rounded-xl px-4 py-2 text-sm">
+                    <button onclick="adminAddCategory()" class="btn-glow px-5 py-2 rounded-xl text-sm font-semibold text-white">যোগ করুন</button>
+                </div>
+                <div id="adminCategoryList" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
+            </div>
+
+            <div id="adminTabAds" class="space-y-4 hidden">
+                <div>
+                    <label class="block text-xs font-semibold text-amber-400 mb-1">১. Top Banner Ad Script (উপরে)</label>
+                    <textarea id="scriptTopAd" rows="2" class="w-full glass-input rounded-xl p-3 text-xs font-mono" placeholder="<script>...</script>"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-cyan-400 mb-1">২. Per-Post Native Ad Script (প্রতিটি পোস্টের নিচে)</label>
+                    <textarea id="scriptPerPostAd" rows="2" class="w-full glass-input rounded-xl p-3 text-xs font-mono" placeholder="<script>...</script>"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-purple-400 mb-1">৩. Bottom Sticky Ad Script (নিচে)</label>
+                    <textarea id="scriptBottomAd" rows="2" class="w-full glass-input rounded-xl p-3 text-xs font-mono" placeholder="<script>...</script>"></textarea>
+                </div>
+                <button onclick="adminSaveAds()" class="w-full btn-glow py-2.5 rounded-xl text-sm font-semibold text-white">এডস কোড সেভ করুন</button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed top-20 right-4 z-50 transform translate-x-full transition-transform duration-300 glass-card rounded-2xl px-5 py-3 border border-cyan-500/40 text-sm font-medium flex items-center space-x-2 shadow-2xl">
+        <i class="fa-solid fa-circle-check text-cyan-400 text-base" id="toastIcon"></i>
+        <span id="toastMsg"></span>
+    </div>
+
+    <!-- ================= FIREBASE & APP LOGIC ================= -->
+    <script>
+        // FIREBASE CONFIG (OurDinajpur)
+        const firebaseConfig = {
+            apiKey: "AIzaSyDXxsVPpnIqwkZZwXpWCan4zHHN3C5ik-I",
+            authDomain: "ourdinajpur.firebaseapp.com",
+            databaseURL: "https://ourdinajpur-default-rtdb.firebaseio.com",
+            projectId: "ourdinajpur",
+            storageBucket: "ourdinajpur.firebasestorage.app",
+            messagingSenderId: "511524939323",
+            appId: "1:511524939323:web:2d861979aedbc55ddcde1e",
+            measurementId: "G-SCHSW1G3XD"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+
+        const SECRET_ADMIN_PASS = "shahanur01341048143";
+
+        let currentUser = null;
+        let firebaseAuthUser = null;
+
+        let usersDB = [];
+        let categoriesDB = ["সব", "ভালোবাসা", "অ্যাটিটিউড", "ইসলামিক", "কষ্ট", "মোটিভেশন", "জীবন"];
+        let selectedCategory = "সব";
+        let adminProfile = {
+            name: "শাহানিয়ার রহমান (অ্যাডমিন)",
+            avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=AdminProfile",
+            facebook: "https://facebook.com",
+            tiktok: "https://tiktok.com",
+            youtube: "https://youtube.com"
+        };
+        let postsDB = [];
+        let adScripts = {
+            topAd: '',
+            perPostAd: '',
+            bottomAd: ''
+        };
+        let messagesDB = [];
+        let activeChatUserId = null;
+
+        // Firebase Auth State Listener
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                firebaseAuthUser = user;
+                // Fetch extra user details from Realtime Database
+                db.ref('users/' + user.uid).on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        currentUser = data;
+                        currentUser.emailVerified = user.emailVerified;
+                    } else {
+                        currentUser = {
+                            id: user.uid,
+                            name: user.displayName || 'ইউজার',
+                            email: user.email,
+                            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`,
+                            isBanned: false,
+                            emailVerified: user.emailVerified,
+                            followers: [],
+                            following: []
+                        };
+                    }
+                    renderUserAuthUI();
+                    renderPosts();
+                });
+            } else {
+                firebaseAuthUser = null;
+                currentUser = null;
+                renderUserAuthUI();
+                renderPosts();
+            }
+        });
+
+        // Realtime Database Listeners
+        function initFirebaseSync() {
+            db.ref('posts').on('value', (snapshot) => {
+                const data = snapshot.val();
+                postsDB = data ? Object.values(data) : [];
+                renderPosts();
+            });
+
+            db.ref('users').on('value', (snapshot) => {
+                const data = snapshot.val();
+                usersDB = data ? Object.values(data) : [];
+            });
+
+            db.ref('categories').on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) categoriesDB = data;
+                renderCategories();
+            });
+
+            db.ref('config').on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    if (data.adminProfile) adminProfile = data.adminProfile;
+                    if (data.adScripts) adScripts = data.adScripts;
+                    setupFollowAdminPopupData();
+                    renderAds();
+                }
+            });
+
+            db.ref('messages').on('value', (snapshot) => {
+                const data = snapshot.val();
+                messagesDB = data ? Object.values(data) : [];
+                if (activeChatUserId) renderChatMessages();
+            });
+        }
+
+        window.onload = function() {
+            initFirebaseSync();
+            setTimeout(() => {
+                document.getElementById('followAdminModal').classList.remove('hidden');
+            }, 600);
+        };
+
+        // Theme Toggle Fix (Ensures Complete Dark/Light Mode Shift)
+        function toggleTheme() {
+            const html = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                icon.className = "fa-solid fa-moon text-lg";
+            } else {
+                html.classList.add('dark');
+                icon.className = "fa-solid fa-sun text-lg";
+            }
+        }
+
+        function switchAuthMode(mode) {
+            if (mode === 'login') {
+                document.getElementById('formLogin').classList.remove('hidden');
+                document.getElementById('formRegister').classList.add('hidden');
+                document.getElementById('tabAuthLogin').className = "flex-1 py-1 text-xs font-bold text-cyan-400 border-b-2 border-cyan-400";
+                document.getElementById('tabAuthRegister').className = "flex-1 py-1 text-xs font-bold text-gray-400";
+            } else {
+                document.getElementById('formLogin').classList.add('hidden');
+                document.getElementById('formRegister').classList.remove('hidden');
+                document.getElementById('tabAuthRegister').className = "flex-1 py-1 text-xs font-bold text-cyan-400 border-b-2 border-cyan-400";
+                document.getElementById('tabAuthLogin').className = "flex-1 py-1 text-xs font-bold text-gray-400";
+            }
+        }
+
+        // FIREBASE EMAIL & PASSWORD REGISTER + EMAIL VERIFICATION
+        function handleUserRegister(e) {
+            e.preventDefault();
+            const name = document.getElementById('regName').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const pass = document.getElementById('regPass').value.trim();
+
+            if (!name || !email || !pass) return;
+
+            auth.createUserWithEmailAndPassword(email, pass)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    user.updateProfile({
+                        displayName: name
+                    });
+
+                    // Send Email Verification Link
+                    user.sendEmailVerification().then(() => {
+                        showToast("ভেরিফিকেশন লিংক আপনার জিমেইলে পাঠানো হয়েছে!", false);
+                    });
+
+                    const newUser = {
+                        id: user.uid,
+                        name: name,
+                        email: email,
+                        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`,
+                        isBanned: false,
+                        followers: [],
+                        following: []
+                    };
+
+                    db.ref('users/' + user.uid).set(newUser);
+                    closeModal('loginModal');
+                    alert("আপনার জিমেইলে একটি ভেরিফিকেশন লিংক পাঠানো হয়েছে। দয়া করে আপনার জিমেইলে গিয়ে লিংকে ক্লিক করে ভেরিফাই করুন!");
+                })
+                .catch((error) => {
+                    showToast(error.message, true);
+                });
+        }
+
+        // FIREBASE USER LOGIN
+        function handleUserLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value.trim();
+            const pass = document.getElementById('loginPass').value.trim();
+
+            auth.signInWithEmailAndPassword(email, pass)
+                .then((userCredential) => {
+                    closeModal('loginModal');
+                    showToast("সফলভাবে লগইন হয়েছে!");
+                })
+                .catch((error) => {
+                    showToast("ইমেইল বা পাসওয়ার্ড ভুল দেওয়া হয়েছে!", true);
+                });
+        }
+
+        function handleUserLogout() {
+            auth.signOut().then(() => {
+                closeModal('profileModal');
+                showToast("লগআউট করা হয়েছে");
+            });
+        }
+
+        function renderUserAuthUI() {
+            const container = document.getElementById('userAuthSection');
+            if (currentUser) {
+                container.innerHTML = `
+                    <div class="flex items-center space-x-1.5 glass-card px-3 py-1.5 rounded-full cursor-pointer" onclick="openProfile('${currentUser.id}')">
+                        <img src="${currentUser.avatar}" class="w-6 h-6 rounded-full object-cover">
+                        <span class="text-xs font-semibold">${escapeHtml(currentUser.name)}</span>
+                        ${currentUser.emailVerified ? '<i class="fa-solid fa-circle-check text-cyan-400 text-xs"></i>' : '<i class="fa-solid fa-triangle-exclamation text-amber-400 text-xs" title="Unverified Email"></i>'}
+                    </div>
+                `;
+                document.getElementById('createPostAvatar').src = currentUser.avatar;
+            } else {
+                container.innerHTML = `
+                    <button onclick="openModal('loginModal')" class="btn-glow px-3 py-1.5 rounded-xl text-xs font-bold text-white">
+                        <i class="fa-solid fa-right-to-bracket mr-1"></i> লগইন
+                    </button>
+                `;
+                document.getElementById('createPostAvatar').src = "https://api.dicebear.com/7.x/avataaars/svg?seed=Guest";
+            }
+        }
+
+        function handleNavProfileClick() {
+            if (!currentUser) {
+                openModal('loginModal');
+            } else {
+                openProfile(currentUser.id);
+            }
+        }
+
+        function setupFollowAdminPopupData() {
+            document.getElementById('adminPopupName').innerText = adminProfile.name;
+            document.getElementById('adminPopupAvatar').src = adminProfile.avatar;
+            document.getElementById('adminFbBtn').href = adminProfile.facebook;
+            document.getElementById('adminTtBtn').href = adminProfile.tiktok;
+            document.getElementById('adminYtBtn').href = adminProfile.youtube;
+        }
+
+        function renderCategories() {
+            const container = document.getElementById('categoryFilterContainer');
+            const modalSelect = document.getElementById('postCategorySelect');
+
+            container.innerHTML = '';
+            modalSelect.innerHTML = '';
+
+            categoriesDB.forEach(cat => {
+                const btn = document.createElement('button');
+                const isActive = cat === selectedCategory;
+                btn.className = `px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                    isActive ? 'btn-glow text-white scale-105' : 'glass-card text-gray-400 hover:text-white'
+                }`;
+                btn.innerText = cat;
+                btn.onclick = () => {
+                    selectedCategory = cat;
+                    renderCategories();
+                    renderPosts();
+                };
+                container.appendChild(btn);
+
+                if (cat !== 'সব') {
+                    const opt = document.createElement('option');
+                    opt.value = cat;
+                    opt.innerText = cat;
+                    modalSelect.appendChild(opt);
+                }
+            });
+        }
+
+        // PERFECT DYNAMIC IFRAME AD RENDERER (Adsterra/Monetag Bypass Security Lock)
+        function executeIframeAd(containerId, adScriptCode) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = '';
+
+            if (!adScriptCode || adScriptCode.trim() === '') {
+                container.innerHTML = '<span class="text-xs opacity-50">বিজ্ঞাপনের জন্য অ্যাডমিন প্যানেল থেকে কোড দিন</span>';
+                return;
+            }
+
+            const iframe = document.createElement('iframe');
+            iframe.style.width = '100%';
+            iframe.style.border = 'none';
+            iframe.style.overflow = 'hidden';
+            iframe.style.minHeight = '60px';
+            iframe.scrolling = 'no';
+
+            container.appendChild(iframe);
+
+            const doc = iframe.contentWindow.document;
+            doc.open();
+            doc.write(`
+                <!DOCTYPE html>
+                <html>
+                <head><style>body { margin:0; padding:0; display:flex; justify-content:center; align-items:center; background:transparent; }</style></head>
+                <body>${adScriptCode}</body>
+                </html>
+            `);
+            doc.close();
+        }
+
+        function renderAds() {
+            executeIframeAd('topAdContainer', adScripts.topAd);
+            executeIframeAd('bottomAdContainer', adScripts.bottomAd);
+        }
+
+        function renderPosts() {
+            const container = document.getElementById('postsFeedContainer');
+            container.innerHTML = '';
+
+            let filteredPosts = postsDB;
+            if (selectedCategory !== "সব") {
+                filteredPosts = postsDB.filter(p => p.category === selectedCategory);
+            }
+
+            if (filteredPosts.length === 0) {
+                container.innerHTML = `
+                    <div class="glass-card rounded-2xl p-8 text-center opacity-60">
+                        <i class="fa-regular fa-folder-open text-3xl mb-2 text-cyan-400"></i>
+                        <p class="text-sm">কোনো ক্যাপশন পোস্ট পাওয়া যায়নি!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            filteredPosts.forEach((post, index) => {
+                if (!post.likes) post.likes = [];
+                const isLiked = currentUser && post.likes.includes(currentUser.id);
+                const isSelf = currentUser && post.userId === currentUser.id;
+
+                const postCard = document.createElement('div');
+                postCard.className = "glass-card rounded-3xl p-5 space-y-4 relative";
+
+                postCard.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3 cursor-pointer" onclick="openProfile('${post.userId}')">
+                            <img src="${post.userAvatar}" class="w-11 h-11 rounded-full object-cover border-2 border-cyan-500/30">
+                            <div>
+                                <h4 class="font-bold text-sm hover:text-cyan-400 transition">${escapeHtml(post.userName)}</h4>
+                                <div class="flex items-center space-x-2 text-[11px] opacity-70">
+                                    <span class="bg-cyan-500/10 text-cyan-400 px-2 py-0.5 rounded-full border border-cyan-500/20">${escapeHtml(post.category)}</span>
+                                    <span>• ${post.timestamp}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        ${isSelf ? `
+                            <button onclick="deleteUserPost('${post.id}')" class="text-xs text-rose-500 p-1.5 hover:text-rose-400" title="ডিলিট">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+
+                    <p class="text-sm leading-relaxed font-normal whitespace-pre-line select-text">
+                        ${escapeHtml(post.content)}
+                    </p>
+
+                    <div class="flex items-center justify-between pt-3 border-t border-gray-700/30 text-xs opacity-80">
+                        <div class="flex items-center space-x-4">
+                            <button onclick="toggleLike('${post.id}')" class="flex items-center space-x-1.5 ${isLiked ? 'text-rose-500 font-semibold' : 'hover:text-rose-400'} transition">
+                                <i class="${isLiked ? 'fa-solid' : 'fa-regular'} fa-heart text-base"></i>
+                                <span>${post.likes.length}</span>
+                            </button>
+                        </div>
+
+                        <div class="flex items-center space-x-2">
+                            <button onclick="copyCaption(\`${escapeJsString(post.content)}\`)" class="glass-card px-3 py-1.5 rounded-xl text-cyan-400 hover:bg-cyan-500/20 transition flex items-center gap-1.5">
+                                <i class="fa-regular fa-copy"></i>
+                                <span>কপি</span>
+                            </button>
+                            <button onclick="openChat('${post.userId}')" class="glass-card px-3 py-1.5 rounded-xl text-purple-400 hover:bg-purple-500/20 transition flex items-center gap-1.5">
+                                <i class="fa-regular fa-comment-dots"></i>
+                                <span>মেসেজ</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(postCard);
+
+                // Per Post Ad Injection
+                const adWrapper = document.createElement('div');
+                const adId = 'post_ad_' + index;
+                adWrapper.id = adId;
+                adWrapper.className = "per-post-ad-container my-4 text-center";
+                container.appendChild(adWrapper);
+                executeIframeAd(adId, adScripts.perPostAd);
+            });
+        }
+
+        // CHECK EMAIL VERIFICATION MANDATE
+        function checkUserVerified() {
+            if (!currentUser) {
+                openModal('loginModal');
+                return false;
+            }
+            if (firebaseAuthUser && !firebaseAuthUser.emailVerified) {
+                alert("আপনার জিমেইল ভেরিফাই করা হয়নি! অনুগ্রহ করে জিমেইল চেক করে পাঠানো লিংকে ক্লিক করে ভেরিফাই করে নিন।");
+                return false;
+            }
+            return true;
+        }
+
+        function deleteUserPost(postId) {
+            if (!checkUserVerified()) return;
+            if (!confirm("আপনি কি পোস্টটি মুছে ফেলতে চান?")) return;
+            db.ref('posts/' + postId).remove();
+            showToast("পোস্টটি মুছে ফেলা হয়েছে");
+        }
+
+        function toggleLike(postId) {
+            if (!checkUserVerified()) return;
+            const post = postsDB.find(p => p.id === postId);
+            if (!post) return;
+
+            if (!post.likes) post.likes = [];
+            const idx = post.likes.indexOf(currentUser.id);
+            if (idx > -1) {
+                post.likes.splice(idx, 1);
+            } else {
+                post.likes.push(currentUser.id);
+            }
+
+            db.ref('posts/' + postId).update({
+                likes: post.likes
+            });
+        }
+
+        function copyCaption(text) {
+            const tempInput = document.createElement('textarea');
+            tempInput.value = text;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            showToast("ক্যাপশন কপি করা হয়েছে!");
+        }
+
+        function openCreateModal() {
+            if (!checkUserVerified()) return;
+            document.getElementById('createModal').classList.remove('hidden');
+        }
+
+        function submitNewPost() {
+            if (!checkUserVerified()) return;
+
+            const category = document.getElementById('postCategorySelect').value;
+            const content = document.getElementById('postText').value.trim();
+
+            if (!content) {
+                showToast("ক্যাপশন টাইপ করুন!", true);
+                return;
+            }
+
+            const newPostId = 'post_' + Date.now();
+            const newPost = {
+                id: newPostId,
+                userId: currentUser.id,
+                userName: currentUser.name,
+                userAvatar: currentUser.avatar,
+                category: category,
+                content: content,
+                likes: [],
+                timestamp: 'এখনই'
+            };
+
+            db.ref('posts/' + newPostId).set(newPost);
+            closeModal('createModal');
+            document.getElementById('postText').value = '';
+            showToast("আপনার ক্যাপশন পোস্ট হয়েছে!");
+        }
+
+        function openProfile(userId) {
+            const targetUser = usersDB.find(u => u.id === userId) || currentUser;
+            if (!targetUser) return;
+
+            const isSelf = currentUser && targetUser.id === currentUser.id;
+            const userPosts = postsDB.filter(p => p.userId === targetUser.id);
+            let totalLikes = 0;
+            userPosts.forEach(p => {
+                if (p.likes) totalLikes += p.likes.length;
+            });
+
+            const profileContent = document.getElementById('profileContent');
+            profileContent.innerHTML = `
+                <div class="text-center space-y-3">
+                    <img src="${targetUser.avatar}" class="w-24 h-24 rounded-full mx-auto border-4 border-cyan-500/40 shadow-xl object-cover">
+                    <div>
+                        <h3 class="text-xl font-bold flex items-center justify-center gap-2">
+                            ${escapeHtml(targetUser.name)}
+                            <i class="fa-solid fa-circle-check text-cyan-400 text-sm"></i>
+                        </h3>
+                        <p class="text-xs opacity-60 mt-0.5">আমাদের মেম্বার</p>
+                    </div>
+
+                    ${isSelf ? `
+                        <button onclick="handleUserLogout()" class="px-5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs transition">
+                            <i class="fa-solid fa-right-from-bracket mr-1"></i> লগআউট করুন
+                        </button>
+                    ` : `
+                        <button onclick="closeModal('profileModal'); openChat('${targetUser.id}')" class="glass-card px-5 py-2 rounded-xl text-xs text-purple-400 font-semibold border border-purple-500/30">
+                            <i class="fa-solid fa-paper-plane mr-1"></i> মেসেজ
+                        </button>
+                    `}
+
+                    <div class="grid grid-cols-2 gap-2 pt-4">
+                        <div class="glass-card p-3 rounded-2xl text-center">
+                            <div class="text-lg font-bold text-cyan-400">${userPosts.length}</div>
+                            <div class="text-[10px] opacity-60">মোট পোস্ট</div>
+                        </div>
+                        <div class="glass-card p-3 rounded-2xl text-center">
+                            <div class="text-lg font-bold text-rose-400">${totalLikes}</div>
+                            <div class="text-[10px] opacity-60">মোট লাইক</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 pt-6 border-t border-gray-700/50">
+                    <h4 class="font-bold text-sm mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-layer-group text-cyan-400"></i> ${escapeHtml(targetUser.name)}-এর পোস্টসমূহ
+                    </h4>
+                    <div class="space-y-4">
+                        ${userPosts.length === 0 ? '<p class="text-xs text-gray-500 text-center py-4">কোনো পোস্ট পাওয়া যায়নি</p>' : ''}
+                        ${userPosts.map(p => `
+                            <div class="glass-card p-4 rounded-2xl space-y-2 border border-gray-700/50">
+                                <p class="text-xs">${escapeHtml(p.content)}</p>
+                                <div class="flex items-center justify-between text-[11px] opacity-60 pt-2 border-t border-gray-700/50">
+                                    <span class="text-cyan-400">${p.category}</span>
+                                    <span>❤️ ${p.likes ? p.likes.length : 0}</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            document.getElementById('profileModal').classList.remove('hidden');
+        }
+
+        function openChat(targetUserId) {
+            if (!checkUserVerified()) return;
+            const targetUser = usersDB.find(u => u.id === targetUserId);
+            if (!targetUser) return;
+
+            activeChatUserId = targetUserId;
+            document.getElementById('chatUserName').innerText = targetUser.name;
+            document.getElementById('chatUserAvatar').src = targetUser.avatar;
+
+            renderChatMessages();
+            document.getElementById('messagesModal').classList.remove('hidden');
+        }
+
+        function renderChatMessages() {
+            if (!activeChatUserId) return;
+            const chatContainer = document.getElementById('chatMessages');
+            chatContainer.innerHTML = '';
+
+            const conversation = messagesDB.filter(m =>
+                (m.senderId === currentUser.id && m.receiverId === activeChatUserId) ||
+                (m.senderId === activeChatUserId && m.receiverId === currentUser.id)
+            );
+
+            if (conversation.length === 0) {
+                chatContainer.innerHTML = `<div class="text-center text-xs opacity-50 py-8">কথোপকথন শুরু করতে বার্তা লিখুন...</div>`;
+                return;
+            }
+
+            conversation.forEach(m => {
+                const isMe = m.senderId === currentUser.id;
+                const msgBubble = document.createElement('div');
+                msgBubble.className = `flex ${isMe ? 'justify-end' : 'justify-start'}`;
+                msgBubble.innerHTML = `
+                    <div class="max-w-[75%] rounded-2xl px-4 py-2.5 text-xs ${
+                        isMe ? 'btn-glow text-white rounded-br-none' : 'glass-card border border-gray-700/50 rounded-bl-none'
+                    }">
+                        <p>${escapeHtml(m.text)}</p>
+                        <span class="text-[9px] opacity-70 block text-right mt-1">${m.time}</span>
+                    </div>
+                `;
+                chatContainer.appendChild(msgBubble);
+            });
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function sendDirectMessage() {
+            if (!checkUserVerified()) return;
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            if (!text || !activeChatUserId) return;
+
+            const msgId = 'msg_' + Date.now();
+            const newMsg = {
+                id: msgId,
+                senderId: currentUser.id,
+                receiverId: activeChatUserId,
+                text: text,
+                time: new Date().toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                })
+            };
+
+            db.ref('messages/' + msgId).set(newMsg);
+            input.value = '';
+        }
+
+        // ADMIN PANEL
+        function openAdminModal() {
+            document.getElementById('adminPasswordInput').value = '';
+            document.getElementById('adminLoginModal').classList.remove('hidden');
+        }
+
+        function verifyAdminLogin() {
+            const pass = document.getElementById('adminPasswordInput').value.trim();
+            if (pass === SECRET_ADMIN_PASS) {
+                closeModal('adminLoginModal');
+                loadAdminDashboard();
+                document.getElementById('adminDashboardModal').classList.remove('hidden');
+                showToast("এডমিন হিসেবে লগইন সফল!");
+            } else {
+                showToast("ভুল পাসওয়ার্ড!", true);
+            }
+        }
+
+        function loadAdminDashboard() {
+            document.getElementById('adminInputName').value = adminProfile.name || '';
+            document.getElementById('adminInputFb').value = adminProfile.facebook || '';
+            document.getElementById('adminInputTt').value = adminProfile.tiktok || '';
+            document.getElementById('adminInputYt').value = adminProfile.youtube || '';
+
+            renderAdminPosts();
+            renderAdminUsers();
+            renderAdminChatThreads();
+            renderAdminCategories();
+            document.getElementById('scriptTopAd').value = adScripts.topAd || '';
+            document.getElementById('scriptPerPostAd').value = adScripts.perPostAd || '';
+            document.getElementById('scriptBottomAd').value = adScripts.bottomAd || '';
+        }
+
+        function switchAdminTab(tab) {
+            ['Posts', 'Users', 'Messages', 'Popup', 'Categories', 'Ads'].forEach(t => {
+                const el = document.getElementById(`adminTab${t}`);
+                if (el) el.classList.add('hidden');
+            });
+
+            ['Posts', 'Users', 'MsgMonitor', 'Popup', 'Categories', 'Ads'].forEach(btn => {
+                const b = document.getElementById(`tabBtn${btn}`);
+                if (b) b.className = "px-4 py-2 rounded-xl text-xs font-semibold text-gray-400";
+            });
+
+            const activeBtn = document.getElementById(`tabBtn${tab === 'messages' ? 'MsgMonitor' : (tab.charAt(0).toUpperCase() + tab.slice(1))}`);
+            if (activeBtn) activeBtn.className = "px-4 py-2 rounded-xl text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30";
+
+            const activeTabEl = document.getElementById(`adminTab${tab.charAt(0).toUpperCase() + tab.slice(1)}`);
+            if (activeTabEl) activeTabEl.classList.remove('hidden');
+        }
+
+        function renderAdminPosts() {
+            const container = document.getElementById('adminPostsList');
+            container.innerHTML = '';
+
+            postsDB.forEach(post => {
+                const card = document.createElement('div');
+                card.className = "glass-card p-3 rounded-2xl flex items-center justify-between text-xs border border-gray-700/50";
+                card.innerHTML = `
+                    <div class="flex items-center space-x-3 flex-1 overflow-hidden pr-2">
+                        <img src="${post.userAvatar}" class="w-8 h-8 rounded-full flex-shrink-0">
+                        <div class="truncate">
+                            <div class="font-bold">${escapeHtml(post.userName)} <span class="text-[10px] text-cyan-400">(${post.category})</span></div>
+                            <div class="opacity-80 truncate">${escapeHtml(post.content)}</div>
+                        </div>
+                    </div>
+                    <button onclick="adminDeletePost('${post.id}')" class="px-2.5 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-[10px]">
+                        <i class="fa-solid fa-trash"></i> ডিলিট
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function adminDeletePost(postId) {
+            if (!confirm("পোস্টটি ডিলিট করতে চান?")) return;
+            db.ref('posts/' + postId).remove();
+            showToast("পোস্ট ডিলিট হয়েছে");
+        }
+
+        function renderAdminUsers() {
+            const container = document.getElementById('adminUsersList');
+            container.innerHTML = '';
+
+            usersDB.forEach(u => {
+                const userPostsCount = postsDB.filter(p => p.userId === u.id).length;
+                const div = document.createElement('div');
+                div.className = "glass-card p-3 rounded-2xl flex items-center justify-between text-xs border border-gray-700/50";
+                div.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <img src="${u.avatar}" class="w-9 h-9 rounded-full object-cover">
+                        <div>
+                            <div class="font-bold flex items-center gap-2">${escapeHtml(u.name)}</div>
+                            <div class="text-[11px] text-amber-400 font-mono">${escapeHtml(u.email)}</div>
+                            <div class="text-[10px] opacity-60">পোস্ট: ${userPostsCount} টি</div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function renderAdminChatThreads() {
+            const container = document.getElementById('adminChatThreadsList');
+            container.innerHTML = '';
+
+            let pairs = [];
+            messagesDB.forEach(m => {
+                const pKey = [m.senderId, m.receiverId].sort().join('_');
+                if (!pairs.includes(pKey)) pairs.push(pKey);
+            });
+
+            if (pairs.length === 0) {
+                container.innerHTML = `<p class="text-xs opacity-50 py-4 text-center">কোনো মেসেজ নেই</p>`;
+                return;
+            }
+
+            pairs.forEach(pKey => {
+                const [u1Id, u2Id] = pKey.split('_');
+                const u1 = usersDB.find(u => u.id === u1Id) || {
+                    name: 'Unknown'
+                };
+                const u2 = usersDB.find(u => u.id === u2Id) || {
+                    name: 'Unknown'
+                };
+
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left glass-card p-2.5 rounded-xl text-xs transition";
+                btn.innerHTML = `<div class="font-bold text-cyan-400 truncate">${escapeHtml(u1.name)} ↔ ${escapeHtml(u2.name)}</div>`;
+                btn.onclick = () => loadAdminFullChatThread(u1Id, u2Id);
+                container.appendChild(btn);
+            });
+        }
+
+        function loadAdminFullChatThread(u1Id, u2Id) {
+            const fullBox = document.getElementById('adminChatFullBox');
+            fullBox.innerHTML = '';
+
+            const conversation = messagesDB.filter(m =>
+                (m.senderId === u1Id && m.receiverId === u2Id) ||
+                (m.senderId === u2Id && m.receiverId === u1Id)
+            );
+
+            conversation.forEach(m => {
+                const sender = usersDB.find(u => u.id === m.senderId) || {
+                    name: 'Unknown'
+                };
+                const div = document.createElement('div');
+                div.className = "glass-card p-2 rounded-xl text-xs border border-gray-700/50";
+                div.innerHTML = `
+                    <div class="flex justify-between text-[10px] opacity-60 mb-1">
+                        <span class="font-bold text-amber-400">${escapeHtml(sender.name)}</span>
+                        <span>${m.time}</span>
+                    </div>
+                    <p>${escapeHtml(m.text)}</p>
+                `;
+                fullBox.appendChild(div);
+            });
+        }
+
+        function adminSavePopupSettings() {
+            adminProfile.name = document.getElementById('adminInputName').value.trim();
+            adminProfile.facebook = document.getElementById('adminInputFb').value.trim();
+            adminProfile.tiktok = document.getElementById('adminInputTt').value.trim();
+            adminProfile.youtube = document.getElementById('adminInputYt').value.trim();
+
+            const fileInput = document.getElementById('adminFileInput');
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    adminProfile.avatar = e.target.result;
+                    db.ref('config/adminProfile').set(adminProfile);
+                    showToast("এডমিন ছবি ও সোশ্যাল লিংক সেভ হয়েছে!");
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            } else {
+                db.ref('config/adminProfile').set(adminProfile);
+                showToast("পপআপ সেটিংস সেভ করা হয়েছে!");
+            }
+        }
+
+        function renderAdminCategories() {
+            const container = document.getElementById('adminCategoryList');
+            container.innerHTML = '';
+
+            categoriesDB.forEach(cat => {
+                const div = document.createElement('div');
+                div.className = "glass-card p-3 rounded-xl flex items-center justify-between border border-gray-700/50";
+                div.innerHTML = `
+                    <span class="text-xs font-semibold">${cat}</span>
+                    ${cat !== 'সব' ? `
+                        <button onclick="adminDeleteCategory('${cat}')" class="text-rose-400 hover:text-rose-300 text-xs p-1">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    ` : '<span class="text-[10px] opacity-50">ডিফল্ট</span>'}
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function adminAddCategory() {
+            const input = document.getElementById('newCategoryInput');
+            const catName = input.value.trim();
+            if (!catName || categoriesDB.includes(catName)) return;
+
+            categoriesDB.push(catName);
+            db.ref('categories').set(categoriesDB);
+            input.value = '';
+            showToast(`'${catName}' যুক্ত করা হয়েছে`);
+        }
+
+        function adminDeleteCategory(catName) {
+            categoriesDB = categoriesDB.filter(c => c !== catName);
+            if (selectedCategory === catName) selectedCategory = "সব";
+            db.ref('categories').set(categoriesDB);
+            showToast(`'${catName}' মুছে ফেলা হয়েছে`);
+        }
+
+        function adminSaveAds() {
+            adScripts.topAd = document.getElementById('scriptTopAd').value;
+            adScripts.perPostAd = document.getElementById('scriptPerPostAd').value;
+            adScripts.bottomAd = document.getElementById('scriptBottomAd').value;
+
+            db.ref('config/adScripts').set(adScripts);
+            showToast("এডস কোড সেভ করা হয়েছে!");
+        }
+
+        function switchTab(tab) {
+            if (tab === 'messages') {
+                if (!checkUserVerified()) return;
+                if (usersDB.length > 1) {
+                    const otherUser = usersDB.find(u => u.id !== currentUser.id);
+                    if (otherUser) openChat(otherUser.id);
+                } else {
+                    showToast("মেসেজ পাঠাতে অন্য ইউজারের উপস্থিতি প্রয়োজন");
+                }
+            }
+        }
+
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMsg');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMsg.innerText = msg;
+            toastIcon.className = isError ? "fa-solid fa-circle-exclamation text-rose-500 text-base" : "fa-solid fa-circle-check text-cyan-400 text-base";
+
+            toast.classList.remove('translate-x-full');
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+            }, 3000);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        function escapeJsString(str) {
+            if (!str) return '';
+            return str.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\${/g, '\\${');
+        }
+    </script>
+</body>
+
+</html>
